@@ -53,6 +53,7 @@ define([], function () {
                 var args = [function () {
                     supInit.apply(scope, arguments);
                 } ];
+                //Array.prototype.slice.call(arguments)能将具有length属性的对象转成数组
                 childInit.apply(scope, args.concat(slice.call(arguments)));
             };
         }
