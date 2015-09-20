@@ -7,7 +7,7 @@ define(['$', 'c'], function ($, c) {
             this.head = $('head');
             this.body = $('body');
             this.viewRoot = 'view/'; //视图所在目录
-            this.defaultView = 'addr'; //默认加载视图
+            this.defaultView = 'index'; //默认加载视图
 
             this.request; //请求对象
             this.viewPath; //当前请求视图路径，解析request得出

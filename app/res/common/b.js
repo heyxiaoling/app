@@ -29,17 +29,23 @@ define([], function () {
 
         //var supProto = s.prototype;
         //n 新类
+        
+        //我们先初始化一个新的类newClass，并且实例化他，他就会调用本身的两个方法：
+
+        //this._propertys_() 用于实例化本身属性
+        //this.init.apply(this, arguments) init为我们定义的，每个类都会调用的初始化方法
         var n = function () {
             this._propertys_ && this._propertys_();
             this.init && this.init.apply(this, arguments);
         };
+        //让我们新建的类（newClass）继承自我们传入的类
         n.prototype = new s();
-
+        // 初始化四个变量，显然这种情况他们都是空函数
         var supInit = n.prototype.init || function () { };
         var childInit = c.init || function () { };
         var _supAttr = n.prototype._propertys_ || function () { };
         var _childAttr = c._propertys_ || function () { };
-
+        //将传入的子属性的值给予新建类（newClass），这里只有一个参数便忽略吧
         for (var k in c) {
             //_propertys_中作为私有属性
             c.hasOwnProperty(k) && (n.prototype[k] = c[k]);
@@ -47,6 +53,7 @@ define([], function () {
 
         //继承的属性有可能重写init方法
         if (arguments.length && arguments[0].prototype && arguments[0].prototype.init === supInit) {
+            //由于我们的类继承自supClass，所以这里是满足条件的，我们看看他里面干了些什么：
             //重写新建类，初始化方法，传入其继承类的init方法
             n.prototype.init = function () {
                 var scope = this;
@@ -65,6 +72,9 @@ define([], function () {
         };
 
         //成员属性
+        //父类的成员对象赋给子类（因为我们知道成员是不会被继承的）
+        //
+        //http://zhidao.baidu.com/link?url=CQRKo4vRzaiGWMJatKAahjlsN9b-pjSVetB85sBcigm-IzfZVcTPjgw4lhGgE_VzWhSJ-e_J3SPWtyOyDYeahQS586c6ZfUc-SXlD8S2p-C
         for (var k in s) {
             s.hasOwnProperty(k) && (n[k] = s[k]);
         }
