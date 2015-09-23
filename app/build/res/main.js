@@ -1,0 +1,1 @@
+requirejs.config({urlArgs:"v=1.0.0",paths:{jquery:"lib/jquery-2.1.4.min",director:"lib/director.min",iscroll:"lib/iscroll"}}),define("main",function(){});

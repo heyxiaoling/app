@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style type="text/css">
+        div{
+            height: 20px;
+            widows: 20px;
+            font-size: 26px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="div1">
+        HELLO WORLD0
+    </div>
+    <div id="div2">
+        HELLO WORLD2
+    </div>
+    <div id="div3">
+        HELLO WORLD3
+    </div>
+    <div id="div4">
+        HELLO WORLD4
+    </div>
+    <div id="div5">
+        HELLO WORLD5
+    </div>
+    <div id="div6">
+        HELLO WORLD6
+    </div>
+    <div id="div7">
+        HELLO WORLD7
+    </div>
+    <button id="btn">click me</button>
+    <script type="text/javascript">
+        var k = 0;
+        function x() {
+            if(k >= 7) return;
+            document.getElementById('div'+(++k)).innerHTML = 'hello world'
+        }
+        document.getElementById('btn').addEventListener('click', x);
+     
+    </script>
+</body>
+</html>
