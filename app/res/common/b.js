@@ -1,7 +1,6 @@
 define([], function () {
 
     var base = {}; //base
-    var slice = [].slice;
     var indexOf = function (k, arr) {
         if (!arr) {
             return -1;
@@ -34,18 +33,20 @@ define([], function () {
 
         //this._propertys_() 用于实例化本身属性
         //this.init.apply(this, arguments) init为我们定义的，每个类都会调用的初始化方法
+
         var n = function () {
             this._propertys_ && this._propertys_();
             this.init && this.init.apply(this, arguments);
         };
         //让我们新建的类（newClass）继承自我们传入的类
         n.prototype = new s();
-        // 初始化四个变量，显然这种情况他们都是空函数
+        // 当只有一个参数时：初始化四个变量，显然这种情况他们都是空函数
         var supInit = n.prototype.init || function () { };
         var childInit = c.init || function () { };
         var _supAttr = n.prototype._propertys_ || function () { };
         var _childAttr = c._propertys_ || function () { };
         //将传入的子属性的值给予新建类（newClass），这里只有一个参数便忽略吧
+
         for (var k in c) {
             //_propertys_中作为私有属性
             c.hasOwnProperty(k) && (n.prototype[k] = c[k]);
@@ -61,7 +62,7 @@ define([], function () {
                     supInit.apply(scope, arguments);
                 } ];
                 //Array.prototype.slice.call(arguments)能将具有length属性的对象转成数组
-                childInit.apply(scope, args.concat(slice.call(arguments)));
+                childInit.apply(scope, args.concat([].slice.call(arguments)));
             };
         }
 
@@ -78,6 +79,7 @@ define([], function () {
         for (var k in s) {
             s.hasOwnProperty(k) && (n[k] = s[k]);
         }
+
         return n;
     };
 
