@@ -27,7 +27,6 @@ define(['$', 'c'], function ($, c) {
                 setTitle: function (title) {
                     scope.setTitle.call(scope, title);
                 }
-
             }; //提供给视图访问的接口，暂时不管
             this.history = []; //历史记录
 
