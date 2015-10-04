@@ -118,8 +118,6 @@ define(['$', 'c'], function ($, c) {
             var view = this.views.getItem(viewPath);
             var lastView, curView;
             //第一次必定为空
-            
-            // console.log(view);
             if (!view) {
                 //直接加载视图，执行方法会返回加载好的视图
                 this.loadView(viewPath, function (View) {
@@ -141,7 +139,6 @@ define(['$', 'c'], function ($, c) {
                     curView = this.curView;
                     //将当前视图压入hash
                     this.views.push(viewPath, curView);
-                    console.log(this.curView);
                     //呈现当前视图，并会调用onCreate与onShow事件与onLoad
                     this.curView.show();
 
@@ -153,11 +150,9 @@ define(['$', 'c'], function ($, c) {
                 if (this.curView && this.curView != view) {
                     lastView = this.curView;
                     lastView.hide();
-
                     this.curView = view;
                     //将当前视图装入hash，并删除之前的
                     this.views.push(viewPath, view, true);
-                    console.log(this.curView);
                     this.curView.show();
                     // this.viewPort.append(this.curView.root);
                     this.goTop();

@@ -105,8 +105,7 @@ define([], function () {
             if (index < 0) {
                 return null;
             }
-            console.log(this.keys);
-            return this.keys[index];
+            return this.values[index];
         },
         getKey: function (i) {
             return this.keys[i];
