@@ -105,6 +105,7 @@ define([], function () {
             if (index < 0) {
                 return null;
             }
+            console.log(this.keys);
             return this.keys[index];
         },
         getKey: function (i) {
@@ -122,8 +123,9 @@ define([], function () {
         },
         delByIndex: function (index) {
             if (index < 0) return this;
-            this.keys.splice(index, 1);
-            this.vaules.splice(index, 1);
+            this.keys.slice().splice(index, 1);
+
+            this.values.slice().splice(index, 1);
             return this;
         },
         //移除栈顶hash，并返回
@@ -133,18 +135,22 @@ define([], function () {
             return this.values.pop();
         },
         push: function (k, v, order) {
+
             if (typeof k == 'object' && !v) {
+
                 for (var i in k) {
                     if (k.hasOwnProperty(i)) {
                         this.push(i, k[i], order);
                     }
                 }
             } else {
+
                 var index = indexOf(k, this.keys);
+
                 if (index < 0 || order) {
                     if (order) this.del(k);
-                    this.keys.push[k];
-                    this.values.push[v];
+                    this.keys.push(k);
+                    this.values.push(v);
                 } else {
                     this.values[index] = v;
                 }

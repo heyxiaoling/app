@@ -114,9 +114,12 @@ define(['$', 'c'], function ($, c) {
         },
         swichView: function (viewPath) {
             //获得当前请求视图，可能已经存在
-            var view = this.views.getItem[viewPath];
+
+            var view = this.views.getItem(viewPath);
             var lastView, curView;
             //第一次必定为空
+            
+            // console.log(view);
             if (!view) {
                 //直接加载视图，执行方法会返回加载好的视图
                 this.loadView(viewPath, function (View) {
@@ -137,8 +140,8 @@ define(['$', 'c'], function ($, c) {
 
                     curView = this.curView;
                     //将当前视图压入hash
-
                     this.views.push(viewPath, curView);
+                    console.log(this.curView);
                     //呈现当前视图，并会调用onCreate与onShow事件与onLoad
                     this.curView.show();
 
@@ -147,17 +150,16 @@ define(['$', 'c'], function ($, c) {
                     this.goTop();
                 });
             } else {//第二次加载，当前view以及被加载过
-                //若是当前视图存在（话说必须存在！！！）
-
                 if (this.curView && this.curView != view) {
                     lastView = this.curView;
                     lastView.hide();
+
                     this.curView = view;
                     //将当前视图装入hash，并删除之前的
                     this.views.push(viewPath, view, true);
-
+                    console.log(this.curView);
                     this.curView.show();
-                    //                    this.viewPort.append(this.curView.root);
+                    // this.viewPort.append(this.curView.root);
                     this.goTop();
                 } else {
                     //若是视图没变，但是后面参数有变化
