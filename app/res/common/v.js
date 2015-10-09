@@ -31,7 +31,6 @@ define(['$', 'b'], function ($, b) {
                 var attr = opts && opts.attr;
                 var html = this.createHtml();
                 this.initRoot(attr); //初始化root
-                this.hide();
                 this.rootBox.append(this.root);
                 this.root.html(html);
                 this.trigger('onCreate'); //触发正在创建事件，其实这里都创建完了
@@ -41,19 +40,37 @@ define(['$', 'b'], function ($, b) {
             }
         },
         //呈现/渲染视图
-        show: function (callback) {
+        show: function (z,callback) {
 
             if (this.status == AbstractView.STATE_ONSHOW) {
                 return;
             }
-
             this.create();
-            this.root.show();
+
+            this.root.show().css({'z-index':z,'visibility':'visible'});
+            
             this.trigger('onShow');
             this.status = AbstractView.STATE_ONSHOW
             callback && (typeof callback == 'function') && callback.call(this);
             this.trigger('onLoad');
         },
+        //左边滑屏进入
+        leftin:function(callback){
+            if (this.status == AbstractView.STATE_ONSHOW) {
+                return;
+            }
+            this.create();
+            this.root.addClass('r-next');
+            setTimeout(function(){
+                this.root.addClass('view in');
+                this.trigger('onShow');
+                this.status = AbstractView.STATE_ONSHOW
+                callback && (typeof callback == 'function') && callback.call(this);
+                this.trigger('onLoad');
+            },100);
+
+        },
+        //左边滑屏出去
         //隐藏dom
         hide: function (callback) {
             if (!this.root || this.status == AbstractView.STATE_ONHIDE) {

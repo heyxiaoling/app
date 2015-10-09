@@ -2,30 +2,29 @@ define(['$', 'c'], function ($, c) {
 
     var Application = new c.base.Class({
         _propertys_: function () {
-            var scope = this;
-            this.webRoot = ''; //应用跟目录
+            var _this = this;
+            this.webRoot = ''; //应用根目录
             this.head = $('head');
             this.body = $('body');
             this.viewRoot = 'view/'; //视图所在目录
             this.defaultView = 'index'; //默认加载视图
-
+            this._index=110;    //层级
             this.request; //请求对象
             this.viewPath; //当前请求视图路径，解析request得出
             this.mainFrame; //主框架
             this.viewPort; //视图框架
             this.stateDom; //状态栏
-
             this.views = new c.base.Hash(); //views保存浏览器存储的hash
             this.curView; //当前视图
             this.interface = {
                 forward: function (url) {
-                    scope.forward.call(scope, url);
+                    _this.forward.call(_this, url);
                 },
                 back: function (url) {
-                    scope.back.call(scope, url);
+                    _this.back.call(_this, url);
                 },
                 setTitle: function (title) {
-                    scope.setTitle.call(scope, title);
+                    _this.setTitle.call(_this, title);
                 }
             }; //提供给视图访问的接口，暂时不管
             this.history = []; //历史记录
@@ -35,36 +34,37 @@ define(['$', 'c'], function ($, c) {
             this.isChangeHash = false; //hash是否发生变化
             this.stopListening = false; //是否停止监听url变化，用于跳转时，停止监听
         },
-        init: function (opts) {
-            console.log('app init');
-            //为属性赋值
-            opts = opts || {};
-            for (var k in opts) {
-                this[k] = opts[k];
-            }
-            this.createViewPort();
-            this.bindEvent(); //事件绑定
+        init: function () {
+
+            //事件绑定
+            this.bindEvent();
+
             //将页面导向初始页
             this.forward(this.defaultView);
+            
         },
-        forward: function (url, replace) {
-            var scope = this;
+        forward: function (url,replace) {
+            
             url = url.toLowerCase();
-            this.stopListen();
+
+
             if (replace) {
                 window.location.replace(('#' + url).replace(/^#+/, '#'));
             } else {
                 window.location.href = ('#' + url).replace(/^#+/, '#');
+                return;
             }
-            scope.stopListening = false;
+
+
             this.onHashChange(url);
         },
         back: function (url) {
+            //函数作用？
             var referrer = this.lastUrl();
             if (url && (!referrer || referrer.indexOf(url) == -1)) {
                 window.location.hash = url;
             } else {
-                window.history.back(); //???
+                window.history.back(); 
             }
         },
         setTitle: function (title) {
@@ -77,19 +77,9 @@ define(['$', 'c'], function ($, c) {
                 return this.history[this.history.length - 2];
             }
         },
-        //创建app页面基本框架，此处不能使用id，因为。。。
-        createViewPort: function () {
-            var htm = [
-                ''
-            ].join('');
-            this.mainframe = $(htm);
-            this.viewPort = this.mainframe.find('.main-viewport');
-            this.stateDom = this.mainframe.find('.main-state');
-            this.body.append(this.mainframe);
-        },
         //！！！！！！非常重要哦！！！！！！
         bindEvent: function () {
-            var scope = this;
+            var _this = this;
             requirejs.onError = function (e) {
                 if (e && e.requireModules) {
                     for (var i = 0; i < e.requireModules.length; i++) {
@@ -98,13 +88,14 @@ define(['$', 'c'], function ($, c) {
                 }
             };
             $(window).bind('hashchange', function () {
-                scope.onHashChange.call(scope);
+                _this.onHashChange.call(_this);
             });
         },
         onHashChange: function (url) {
             this.history.push(window.location.href);
             //有时候会停止监听
             if (!this.stopListening) {
+                this._index+=1;
                 url = url || decodeURIComponent(window.location.hash.replace(/^#+/i, '')).toLowerCase();
                 url = url.replace(/^#+/i, '');
                 this.request = this.parseHash(url);
@@ -114,11 +105,11 @@ define(['$', 'c'], function ($, c) {
         },
         swichView: function (viewPath) {
             //获得当前请求视图，可能已经存在
-
             var view = this.views.getItem(viewPath);
             var lastView, curView;
             //第一次必定为空
             if (!view) {
+                console.log(viewPath);
                 //直接加载视图，执行方法会返回加载好的视图
                 this.loadView(viewPath, function (View) {
                     //第一步判断当前是否具有视图，具有则需要进行切换操作，
@@ -140,7 +131,7 @@ define(['$', 'c'], function ($, c) {
                     //将当前视图压入hash
                     this.views.push(viewPath, curView);
                     //呈现当前视图，并会调用onCreate与onShow事件与onLoad
-                    this.curView.show();
+                    this.curView.show(this._index);
 
                     this.viewPort.append(this.curView.root);
 
@@ -153,7 +144,7 @@ define(['$', 'c'], function ($, c) {
                     this.curView = view;
                     //将当前视图装入hash，并删除之前的
                     this.views.push(viewPath, view, true);
-                    this.curView.show();
+                    this.curView.leftin();
                     // this.viewPort.append(this.curView.root);
                     this.goTop();
                 } else {
@@ -169,7 +160,6 @@ define(['$', 'c'], function ($, c) {
         loadView: function (viewPath, callback) {
             var scope = this;
             var path = this.buildUrl(viewPath);
-
             requirejs([path], function (View) {
                 callback && callback.call(scope, View);
             });

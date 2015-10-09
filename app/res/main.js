@@ -20,7 +20,7 @@ require.config({
         '_':'lib/underscore',
         'r':'lib/director.min',
         'text':'lib/text',
-        
+        'i':'lib/iscroll',
         'c':'common/c',
         'b': 'common/b',
         
