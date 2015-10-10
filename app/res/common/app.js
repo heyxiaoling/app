@@ -7,13 +7,13 @@ define(['$', 'c'], function ($, c) {
             this.head = $('head');
             this.body = $('body');
             this.viewRoot = 'view/'; //视图所在目录
-            this.defaultView = 'index'; //默认加载视图
+            this.defaultView ='index'; //默认加载视图
+            this._url=window.location.hash.substring(1)||'index'; //当前hash
             this._index=110;    //层级
             this.request; //请求对象
             this.viewPath; //当前请求视图路径，解析request得出
-            this.mainFrame; //主框架
             this.viewPort; //视图框架
-            this.stateDom; //状态栏
+            this.firstload=true; //是否第一次加载
             this.views = new c.base.Hash(); //views保存浏览器存储的hash
             this.curView; //当前视图
             this.interface = {
@@ -38,25 +38,7 @@ define(['$', 'c'], function ($, c) {
 
             //事件绑定
             this.bindEvent();
-
-            //将页面导向初始页
-            this.forward(this.defaultView);
             
-        },
-        forward: function (url,replace) {
-            
-            url = url.toLowerCase();
-
-
-            if (replace) {
-                window.location.replace(('#' + url).replace(/^#+/, '#'));
-            } else {
-                window.location.href = ('#' + url).replace(/^#+/, '#');
-                return;
-            }
-
-
-            this.onHashChange(url);
         },
         back: function (url) {
             //函数作用？
@@ -87,15 +69,46 @@ define(['$', 'c'], function ($, c) {
                     }
                 }
             };
+
+            window.location.hash = this._url;
+            
+            //第一次加载
+            _this.firstLoad();
+
             $(window).bind('hashchange', function () {
-                _this.onHashChange.call(_this);
+                if(_this.firstload){
+                    //第一次加载不需监控
+                    _this.firstload=false;
+                }else{
+                    _this._url=_this.getLastHash(window.location.hash.substring(1));
+                    _this.onHashChange(_this._url);
+                }
             });
+
+        },
+        firstLoad:function(){
+            var _this=this;
+            //加载index视图
+            _this.onHashChange(this.defaultView);
+            //加载其他视图
+            if(_this._url!='index'){
+                var _url_arr=_this._url.split('/');
+                for(var i=0;i<_url_arr.length;i++){
+                    _this.onHashChange(_url_arr[i]);
+                }
+            }
+        },
+        //获取最后一个hash值
+        getLastHash:function(hash){
+            return hash.split('/')[hash.split('/').length-1];
         },
         onHashChange: function (url) {
             this.history.push(window.location.href);
             //有时候会停止监听
             if (!this.stopListening) {
-                this._index+=1;
+                
+                //decodeURIComponent() 函数可对 encodeURIComponent() 函数编码的 URI 进行解码。
+                //replace(/^#+/i, '') 把#开头去掉
                 url = url || decodeURIComponent(window.location.hash.replace(/^#+/i, '')).toLowerCase();
                 url = url.replace(/^#+/i, '');
                 this.request = this.parseHash(url);
@@ -109,7 +122,6 @@ define(['$', 'c'], function ($, c) {
             var lastView, curView;
             //第一次必定为空
             if (!view) {
-                console.log(viewPath);
                 //直接加载视图，执行方法会返回加载好的视图
                 this.loadView(viewPath, function (View) {
                     //第一步判断当前是否具有视图，具有则需要进行切换操作，
@@ -117,14 +129,13 @@ define(['$', 'c'], function ($, c) {
                     if (this.curView) {
                         //设置隐藏的是最好访问的view
                         lastView = this.curView;
-                        //this.views.each(function (k, v) {
-                        //  v.hide();
-                        //});
                         this.lastView = lastView;
                         this.lastView.hide();
                     }
-
+                    //层级增加
+                    this._index+=1;
                     //开始加载新的view
+
                     this.curView = new View(this.request, this.interface);
 
                     curView = this.curView;
@@ -138,14 +149,15 @@ define(['$', 'c'], function ($, c) {
                     this.goTop();
                 });
             } else {//第二次加载，当前view以及被加载过
+
                 if (this.curView && this.curView != view) {
+                    this._index+=1;
                     lastView = this.curView;
                     lastView.hide();
                     this.curView = view;
                     //将当前视图装入hash，并删除之前的
                     this.views.push(viewPath, view, true);
                     this.curView.leftin();
-                    // this.viewPort.append(this.curView.root);
                     this.goTop();
                 } else {
                     //若是视图没变，但是后面参数有变化
@@ -158,10 +170,10 @@ define(['$', 'c'], function ($, c) {
         },
         //!!!非常重要
         loadView: function (viewPath, callback) {
-            var scope = this;
+            var _this = this;
             var path = this.buildUrl(viewPath);
             requirejs([path], function (View) {
-                callback && callback.call(scope, View);
+                callback && callback.call(_this, View);
             });
         },
         buildUrl: function (path) {
@@ -175,7 +187,7 @@ define(['$', 'c'], function ($, c) {
             sec = sec || 10;
             $('body,html').animate({ scrollTop: 0 }, sec);
         },
-        //该方法慢慢看吧。。。
+        //该方法?
         parseHash: function (hash) {
             var fullhash = hash,
                 hash = hash.replace(/([^\|]*)(?:\|.*)?$/img, '$1'),

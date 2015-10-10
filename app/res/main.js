@@ -18,7 +18,7 @@ require.config({
     paths: {
         '$':'lib/jquery-2.1.4.min',
         '_':'lib/underscore',
-        'r':'lib/director.min',
+        'd':'lib/director.min',
         'text':'lib/text',
         'i':'lib/iscroll',
         'c':'common/c',
