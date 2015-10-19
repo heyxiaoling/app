@@ -30,7 +30,6 @@ define(['$', '_', 'b', 'v','i', getViewPath('index')], function ($, _, b, v,i, h
         //dom创建后，未显示
         onShow: function (z) {
             this.is = new IScroll('#index-content', { mouseWheel: true, tap: true,click: true });
-            console.log(this);
         },
         //dom隐藏前
         onHide: function () {

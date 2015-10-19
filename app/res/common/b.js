@@ -89,7 +89,7 @@ define([], function () {
             this.values = [];
         },
         init: function (obj) {
-            (typeof obj == 'object') || (obj = {}); //???
+            (typeof obj == 'object') || (obj = {});
             for (var k in obj) {
                 if (obj.hasOwnProperty(k)) {
                     this.keys.push(k);

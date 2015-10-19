@@ -8,7 +8,7 @@ define(['$', 'c'], function ($, c) {
             this.body = $('body');
             this.viewRoot = 'view/'; //视图所在目录
             this.defaultView ='index'; //默认加载视图
-            this._url=window.location.hash.substring(1)||'index'; //当前hash
+            this._url=decodeURIComponent(window.location.hash.replace(/^#+/i, '')).toLowerCase()||'index'; //当前hash//decodeURIComponent() 函数可对 encodeURIComponent() 函数编码的 URI 进行解码。//replace(/^#+/i, '') 把#开头去掉
             this._index=110;    //层级
             this.request; //请求对象
             this.viewPath; //当前请求视图路径，解析request得出
@@ -16,18 +16,10 @@ define(['$', 'c'], function ($, c) {
             this.firstload=true; //是否第一次加载
             this.views = new c.base.Hash(); //views保存浏览器存储的hash
             this.curView; //当前视图
+            this.move='in';
             this.interface = {
-                forward: function (url) {
-                    _this.forward.call(_this, url);
-                },
-                back: function (url) {
-                    _this.back.call(_this, url);
-                },
-                setTitle: function (title) {
-                    _this.setTitle.call(_this, title);
-                }
+                
             }; //提供给视图访问的接口，暂时不管
-            this.history = []; //历史记录
 
             this.lastHash = '';
             this.lastFullHash = '';
@@ -40,24 +32,8 @@ define(['$', 'c'], function ($, c) {
             this.bindEvent();
             
         },
-        back: function (url) {
-            //函数作用？
-            var referrer = this.lastUrl();
-            if (url && (!referrer || referrer.indexOf(url) == -1)) {
-                window.location.hash = url;
-            } else {
-                window.history.back(); 
-            }
-        },
         setTitle: function (title) {
             document.title = title;
-        },
-        lastUrl: function () {
-            if (this.history.length < 2) {
-                return document.referrer;
-            } else {
-                return this.history[this.history.length - 2];
-            }
         },
         //！！！！！！非常重要哦！！！！！！
         bindEvent: function () {
@@ -81,7 +57,8 @@ define(['$', 'c'], function ($, c) {
                     _this.firstload=false;
                 }else{
                     _this._url=_this.getLastHash(window.location.hash.substring(1));
-                    _this.onHashChange(_this._url);
+                    var _url_btn=_this.showbtn(window.location.hash.substring(1));
+                    _this.onHashChange(_this._url,_url_btn);
                 }
             });
 
@@ -89,34 +66,59 @@ define(['$', 'c'], function ($, c) {
         firstLoad:function(){
             var _this=this;
             //加载index视图
-            _this.onHashChange(this.defaultView);
+            _this.onHashChange(this.defaultView,true);
             //加载其他视图
             if(_this._url!='index'){
-                var _url_arr=_this._url.split('/');
+                var _url_arr=_this.analysisHash(_this._url);
                 for(var i=0;i<_url_arr.length;i++){
-                    _this.onHashChange(_url_arr[i]);
+                    if(_url_arr[i].way=="in"){
+                        _this.onHashChange(_url_arr[i].page,true);
+                    }else if(_url_arr[i].way=="out"){
+                        _this.onHashChange(_url_arr[i].page,false);
+                    }
                 }
+
+                _this.firstload=false;
             }
+        },
+        analysisHash:function(hash){
+            //分析hash
+            var o=[];
+            //这个对象包含 页面对应的id，切换方式，start_in/start_out, index/start_in/detail_in
+            var arr1=hash.split('/');
+
+            for(var i=0;i<arr1.length;i++){
+                o[i]={};
+                o[i].page=arr1[i].split('_')[0];
+                o[i].way=arr1[i].split('_')[1];
+
+            }
+            return o;
         },
         //获取最后一个hash值
         getLastHash:function(hash){
             return hash.split('/')[hash.split('/').length-1];
         },
-        onHashChange: function (url) {
-            this.history.push(window.location.href);
-            //有时候会停止监听
-            if (!this.stopListening) {
-                
-                //decodeURIComponent() 函数可对 encodeURIComponent() 函数编码的 URI 进行解码。
-                //replace(/^#+/i, '') 把#开头去掉
-                url = url || decodeURIComponent(window.location.hash.replace(/^#+/i, '')).toLowerCase();
-                url = url.replace(/^#+/i, '');
-                this.request = this.parseHash(url);
-                this.viewPath = this.request.viewpath || this.defaultView;
-                this.swichView(this.viewPath); //！！！重要的视图加载
+        //是否显示
+        showbtn:function(hash){
+            var _hash=hash.split('/')[hash.split('/').length-1];
+
+            if(_hash.split('_')[1]&&_hash.split('_')[1]=="in"){
+                return true;
+            }else{
+                return false;
             }
         },
-        swichView: function (viewPath) {
+        onHashChange: function (url,btn) {
+            //有时候会停止监听
+            if (!this.stopListening) {
+                this.request = this.parseHash(url);
+                this.viewPath = this.request.viewpath || this.defaultView;
+                this.swichView(this.viewPath,btn); //！！！重要的视图加载
+
+            }
+        },
+        swichView: function (viewPath,btn) {
             //获得当前请求视图，可能已经存在
             var view = this.views.getItem(viewPath);
             var lastView, curView;
@@ -130,34 +132,46 @@ define(['$', 'c'], function ($, c) {
                         //设置隐藏的是最好访问的view
                         lastView = this.curView;
                         this.lastView = lastView;
-                        this.lastView.hide();
                     }
                     //层级增加
                     this._index+=1;
                     //开始加载新的view
-
-                    this.curView = new View(this.request, this.interface);
+                    this.curView = new View(this.request, this.interface); ///??????
+                    
 
                     curView = this.curView;
-                    //将当前视图压入hash
-                    this.views.push(viewPath, curView);
-                    //呈现当前视图，并会调用onCreate与onShow事件与onLoad
-                    this.curView.show(this._index);
 
+                    //将当前视图压入hash
+
+                    this.views.push(viewPath, curView);
+
+                    //呈现当前视图，并会调用onCreate与onShow事件与onLoad
+                    alert('第一');
+
+                    this.curView.show(this._index,this.curView.request.way);
+
+                    if(btn&&!btn){
+                        this.curView.hide();
+                    }
                     this.viewPort.append(this.curView.root);
 
                     this.goTop();
                 });
             } else {//第二次加载，当前view以及被加载过
-
-                if (this.curView && this.curView != view) {
+                if (this.curView) {
                     this._index+=1;
                     lastView = this.curView;
-                    lastView.hide();
                     this.curView = view;
                     //将当前视图装入hash，并删除之前的
                     this.views.push(viewPath, view, true);
-                    this.curView.leftin();
+                    if(this.curView.request.way=="in"){
+                        this.curView.request.way="out";
+                    }else{
+                        this.curView.request.way="in";
+                    }
+
+                    this.curView.show(this._index,this.curView.request.way);
+
                     this.goTop();
                 } else {
                     //若是视图没变，但是后面参数有变化
@@ -193,7 +207,8 @@ define(['$', 'c'], function ($, c) {
                 hash = hash.replace(/([^\|]*)(?:\|.*)?$/img, '$1'),
                 h = /^([^?&|]*)(.*)?$/i.exec(hash),
                 vp = h[1] ? h[1].split('!') : [],
-                viewpath = (vp.shift() || '').replace(/(^\/+|\/+$)/i, ''),
+                viewpath = (vp.shift() || '').replace(/(^\/+|\/+$)/i, '').split('_')[0],
+                way=hash.split('_')[1],
                 path = vp.length ? vp.join('!').replace(/(^\/+|\/+$)/i, '').split('/') : [],
                 q = (h[2] || '').replace(/^\?*/i, '').split('&'),
                 query = {}, y;
@@ -211,6 +226,7 @@ define(['$', 'c'], function ($, c) {
             this.lashFullHash = fullhash;
             return {
                 viewpath: viewpath,
+                way:way,
                 path: path,
                 query: query,
                 root: location.pathname + location.search

@@ -40,15 +40,24 @@ define(['$', 'b'], function ($, b) {
             }
         },
         //呈现/渲染视图
-        show: function (z,callback) {
+        show: function (z,w,callback) {
 
-            if (this.status == AbstractView.STATE_ONSHOW) {
-                return;
-            }
             this.create();
 
-            this.root.show().css({'z-index':z,'visibility':'visible'});
-            
+            w=w||"";
+            alert(z);
+            this.root.css({'z-index':z,'visibility':'visible'});
+            switch(w){
+                case "":
+
+                break;
+                case "in":
+                    this.leftin();
+                break;
+                case "out":
+                    this.leftout();
+                break;
+            }
             this.trigger('onShow');
             this.status = AbstractView.STATE_ONSHOW
             callback && (typeof callback == 'function') && callback.call(this);
@@ -56,27 +65,29 @@ define(['$', 'b'], function ($, b) {
         },
         //左边滑屏进入
         leftin:function(callback){
-            if (this.status == AbstractView.STATE_ONSHOW) {
-                return;
-            }
-            this.create();
-            this.root.addClass('r-next');
+            var _this=this;
+            _this.root.addClass('r-next');
             setTimeout(function(){
-                this.root.addClass('view in');
-                this.trigger('onShow');
-                this.status = AbstractView.STATE_ONSHOW
-                callback && (typeof callback == 'function') && callback.call(this);
-                this.trigger('onLoad');
+                _this.root.addClass('view in');
+                _this.trigger('onShow');
+                _this.status = AbstractView.STATE_ONSHOW
+                callback && (typeof callback == 'function') && callback.call(_this);
+                _this.trigger('onLoad');
             },100);
 
         },
         //左边滑屏出去
+        leftout:function(){
+            var _this=this;
+
+            _this.root.addClass('out');
+            setTimeout(function(){
+                _this.root.removeClass('r-next view in out').css({'z-index':99});
+            },400);
+        },
         //隐藏dom
         hide: function (callback) {
-            if (!this.root || this.status == AbstractView.STATE_ONHIDE) {
-                return;
-            }
-            this.root.hide();
+            this.root.css({'z-index':99,'visibility':'hidden'});
             this.trigger('onHide');
             this.status = AbstractView.STATE_ONHIDE;
             callback && (typeof callback == 'function') && callback();
