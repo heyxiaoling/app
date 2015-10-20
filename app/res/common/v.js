@@ -27,45 +27,40 @@ define(['$', 'b'], function ($, b) {
         },
         //创建dom
         create: function (opts) {
-            if (!this.isCreated && this.status != AbstractView.STATE_ONCREATE) {
+            if (!this.isCreated) {
+                //如果没有创建
                 var attr = opts && opts.attr;
                 var html = this.createHtml();
                 this.initRoot(attr); //初始化root
                 this.rootBox.append(this.root);
                 this.root.html(html);
                 this.trigger('onCreate'); //触发正在创建事件，其实这里都创建完了
-                this.status = AbstractView.STATE_ONCREATE;
                 this.isCreated = true;
                 this.bindEvent();
             }
         },
         //呈现/渲染视图
         show: function (z,w,callback) {
-
             this.create();
-
             w=w||"";
-
-            
             switch(w){
                 case "normal":
-                    this._in(z);
+                    this._in(z,callback);
                 break;
                 case "in":
-                    this.leftin(z);
+                    this.leftin(z,callback);
                 break;
                 case "out":
-                    this.leftout();
+                    this.leftout(z,callback);
                 break;
             }
-            this.trigger('onShow');
-            this.status = AbstractView.STATE_ONSHOW
-            callback && (typeof callback == 'function') && callback.call(this);
-            this.trigger('onLoad');
+            
         },
         //普通显示
         _in:function(z,callback){
             this.root.css({'z-index':z,'visibility':'visible'});
+            this.trigger('onShow');
+            callback && (typeof callback == 'function') && callback.call(this);
         },
         //左边滑屏进入
         leftin:function(z,callback){
@@ -74,25 +69,24 @@ define(['$', 'b'], function ($, b) {
             setTimeout(function(){
                 _this.root.addClass('view in');
                 _this.trigger('onShow');
-                _this.status = AbstractView.STATE_ONSHOW;
                 callback && (typeof callback == 'function') && callback.call(_this);
-                _this.trigger('onLoad');
             },100);
 
         },
         //左边滑屏出去
-        leftout:function(z){
+        leftout:function(z,callback){
             var _this=this;
             this.root.addClass('out');
             setTimeout(function(){
                 _this.root.removeClass('r-next view in out').css({'z-index':99});
+                this.trigger('onHide');
+                callback && (typeof callback == 'function') && callback.call(_this);
             },400);
         },
         //隐藏dom
         hide: function (callback) {
             this.root.css({'z-index':99,'visibility':'hidden'});
             this.trigger('onHide');
-            this.status = AbstractView.STATE_ONHIDE;
             callback && (typeof callback == 'function') && callback();
         },
         //事件绑定
