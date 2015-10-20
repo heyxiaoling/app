@@ -45,14 +45,14 @@ define(['$', 'b'], function ($, b) {
             this.create();
 
             w=w||"";
-            alert(z);
-            this.root.css({'z-index':z,'visibility':'visible'});
-            switch(w){
-                case "":
 
+            
+            switch(w){
+                case "normal":
+                    this._in(z);
                 break;
                 case "in":
-                    this.leftin();
+                    this.leftin(z);
                 break;
                 case "out":
                     this.leftout();
@@ -63,24 +63,27 @@ define(['$', 'b'], function ($, b) {
             callback && (typeof callback == 'function') && callback.call(this);
             this.trigger('onLoad');
         },
+        //普通显示
+        _in:function(z,callback){
+            this.root.css({'z-index':z,'visibility':'visible'});
+        },
         //左边滑屏进入
-        leftin:function(callback){
+        leftin:function(z,callback){
             var _this=this;
-            _this.root.addClass('r-next');
+            this.root.css({'z-index':z,'visibility':'visible'}).addClass('r-next');
             setTimeout(function(){
                 _this.root.addClass('view in');
                 _this.trigger('onShow');
-                _this.status = AbstractView.STATE_ONSHOW
+                _this.status = AbstractView.STATE_ONSHOW;
                 callback && (typeof callback == 'function') && callback.call(_this);
                 _this.trigger('onLoad');
             },100);
 
         },
         //左边滑屏出去
-        leftout:function(){
+        leftout:function(z){
             var _this=this;
-
-            _this.root.addClass('out');
+            this.root.addClass('out');
             setTimeout(function(){
                 _this.root.removeClass('r-next view in out').css({'z-index':99});
             },400);

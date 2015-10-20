@@ -27,10 +27,8 @@ define(['$', 'c'], function ($, c) {
             this.stopListening = false; //是否停止监听url变化，用于跳转时，停止监听
         },
         init: function () {
-
             //事件绑定
-            this.bindEvent();
-            
+            this.bindEvent(); 
         },
         setTitle: function (title) {
             document.title = title;
@@ -48,50 +46,49 @@ define(['$', 'c'], function ($, c) {
 
             window.location.hash = this._url;
             
-            //第一次加载
+            //第一次加载 就是刷新的时候启用
             _this.firstLoad();
 
             $(window).bind('hashchange', function () {
+
                 if(_this.firstload){
                     //第一次加载不需监控
                     _this.firstload=false;
                 }else{
                     _this._url=_this.getLastHash(window.location.hash.substring(1));
-                    var _url_btn=_this.showbtn(window.location.hash.substring(1));
-                    _this.onHashChange(_this._url,_url_btn);
+                    _this.onHashChange(_this._url);
                 }
             });
 
         },
         firstLoad:function(){
             var _this=this;
-            //加载index视图
-            _this.onHashChange(this.defaultView,true);
+            //加载index视图（必须）
+            _this.onHashChange(this.defaultView);
             //加载其他视图
             if(_this._url!='index'){
-                var _url_arr=_this.analysisHash(_this._url);
+                var _url_arr=_this.arrHash(_this._url);
                 for(var i=0;i<_url_arr.length;i++){
-                    if(_url_arr[i].way=="in"){
-                        _this.onHashChange(_url_arr[i].page,true);
-                    }else if(_url_arr[i].way=="out"){
-                        _this.onHashChange(_url_arr[i].page,false);
+                    _this.onHashChange(_url_arr[i]);
+                    if(i==(_url_arr.length-1)){
+                        _this.firstload=false;
                     }
                 }
-
-                _this.firstload=false;
             }
+        },
+        //解析url
+        arrHash:function(hash){
+            return hash.split('/');
         },
         analysisHash:function(hash){
             //分析hash
             var o=[];
             //这个对象包含 页面对应的id，切换方式，start_in/start_out, index/start_in/detail_in
             var arr1=hash.split('/');
-
             for(var i=0;i<arr1.length;i++){
                 o[i]={};
                 o[i].page=arr1[i].split('_')[0];
                 o[i].way=arr1[i].split('_')[1];
-
             }
             return o;
         },
@@ -99,60 +96,45 @@ define(['$', 'c'], function ($, c) {
         getLastHash:function(hash){
             return hash.split('/')[hash.split('/').length-1];
         },
-        //是否显示
-        showbtn:function(hash){
-            var _hash=hash.split('/')[hash.split('/').length-1];
-
-            if(_hash.split('_')[1]&&_hash.split('_')[1]=="in"){
-                return true;
-            }else{
-                return false;
-            }
-        },
-        onHashChange: function (url,btn) {
+        onHashChange: function (url) {
             //有时候会停止监听
-            if (!this.stopListening) {
+            if (!this.stopListening){
                 this.request = this.parseHash(url);
-                this.viewPath = this.request.viewpath || this.defaultView;
-                this.swichView(this.viewPath,btn); //！！！重要的视图加载
-
+                this.swichView(this.request); //！！！重要的视图加载
             }
         },
-        swichView: function (viewPath,btn) {
+        swichView: function (request) {
             //获得当前请求视图，可能已经存在
-            var view = this.views.getItem(viewPath);
+            var view = this.views.getItem(request.viewpath);
             var lastView, curView;
             //第一次必定为空
             if (!view) {
                 //直接加载视图，执行方法会返回加载好的视图
-                this.loadView(viewPath, function (View) {
+                this.loadView(request.viewpath, function (View) {
                     //第一步判断当前是否具有视图，具有则需要进行切换操作，
                     //不具有则直接加载（判断当前视图是否存在）
                     if (this.curView) {
+
                         //设置隐藏的是最好访问的view
                         lastView = this.curView;
                         this.lastView = lastView;
                     }
                     //层级增加
                     this._index+=1;
+
                     //开始加载新的view
-                    this.curView = new View(this.request, this.interface); ///??????
+
+                    this.curView = new View(request, this.interface); 
                     
 
                     curView = this.curView;
 
                     //将当前视图压入hash
 
-                    this.views.push(viewPath, curView);
-
-                    //呈现当前视图，并会调用onCreate与onShow事件与onLoad
-                    alert('第一');
+                    this.views.push(request.viewpath,curView);
 
                     this.curView.show(this._index,this.curView.request.way);
 
-                    if(btn&&!btn){
-                        this.curView.hide();
-                    }
                     this.viewPort.append(this.curView.root);
 
                     this.goTop();
@@ -163,22 +145,12 @@ define(['$', 'c'], function ($, c) {
                     lastView = this.curView;
                     this.curView = view;
                     //将当前视图装入hash，并删除之前的
-                    this.views.push(viewPath, view, true);
-                    if(this.curView.request.way=="in"){
-                        this.curView.request.way="out";
-                    }else{
-                        this.curView.request.way="in";
-                    }
 
+                    this.views.push(request.viewpath, view, true);
+                    //改变运动方式
+                    this.way(this.curView.request.way);
                     this.curView.show(this._index,this.curView.request.way);
-
                     this.goTop();
-                } else {
-                    //若是视图没变，但是后面参数有变化
-                    if (this.isChangeHash) {
-                        this.curView.show();
-                        this.goTop();
-                    }
                 }
             }
         },
@@ -189,6 +161,19 @@ define(['$', 'c'], function ($, c) {
             requirejs([path], function (View) {
                 callback && callback.call(_this, View);
             });
+        },
+        way:function(_way){
+            switch(_way){
+                case 'normal':
+                
+                break;
+                case 'in':
+                    this.curView.request.way='out';
+                break;
+                case 'out':
+                    this.curView.request.way='in';
+                break;
+            }
         },
         buildUrl: function (path) {
             return this.viewRoot + path;
@@ -203,33 +188,13 @@ define(['$', 'c'], function ($, c) {
         },
         //该方法?
         parseHash: function (hash) {
-            var fullhash = hash,
-                hash = hash.replace(/([^\|]*)(?:\|.*)?$/img, '$1'),
-                h = /^([^?&|]*)(.*)?$/i.exec(hash),
-                vp = h[1] ? h[1].split('!') : [],
-                viewpath = (vp.shift() || '').replace(/(^\/+|\/+$)/i, '').split('_')[0],
-                way=hash.split('_')[1],
-                path = vp.length ? vp.join('!').replace(/(^\/+|\/+$)/i, '').split('/') : [],
-                q = (h[2] || '').replace(/^\?*/i, '').split('&'),
-                query = {}, y;
-            this.isChangeHash = !!(!this.lastHash && fullhash === this.lashFullHash) || !!(this.lastHash && this.lastHash !== hash);
-            if (q) {
-                for (var i = 0; i < q.length; i++) {
-                    if (q[i]) {
-                        y = q[i].split('=');
-                        y[1] ? (query[y[0]] = y[1]) : (query[y[0]] = true);
-                    }
-                }
-            }
-
-            this.lastHash = hash;
-            this.lashFullHash = fullhash;
+            var 
+                viewpath = hash.split('_')[0]||this.defaultView,
+                way=hash.split('_')[1]||"normal";//普通表示没有什么动画
+                
             return {
                 viewpath: viewpath,
-                way:way,
-                path: path,
-                query: query,
-                root: location.pathname + location.search
+                way:way
             };
         }
     });
