@@ -278,9 +278,9 @@ textarea {
  *
  */
 /**
- *	header z-index:20;
- *	page z-index:1;
- *	footer z-index:10;
+ *  header z-index:20;
+ *  page z-index:1;
+ *  footer z-index:10;
 */
 /*header*/
 .header {
@@ -555,11 +555,11 @@ textarea {
           color: #fb7304; }
       .footer ul li:nth-of-type(1) a em {
         background: url(../images/arrow.png) no-repeat;
-        background-position: 0px 0px;
+        background-position: 3px 0px;
         background-size: 150px 300px; }
       .footer ul li:nth-of-type(1) a.active em {
         background: url(../images/arrow.png) no-repeat;
-        background-position: -36px 0px;
+        background-position: -30px 0px;
         background-size: 150px 300px; }
       .footer ul li:nth-of-type(2) a em {
         background: url(../images/arrow.png) no-repeat;

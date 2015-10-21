@@ -148,7 +148,12 @@ define(['$', 'c'], function ($, c) {
 
                     this.views.push(request.viewpath, view, true);
                     //改变运动方式
-                    this.way(this.curView.request.way);
+                    if(request.viewpath=='index'||request.viewpath=='booking'||request.viewpath=='my'){
+                        this.curView.request.way="in";
+                    }else{
+                        this.way(this.curView.request.way);
+                    }
+                    
                     this.curView.show(this._index,this.curView.request.way);
                     this.goTop();
                 }
@@ -165,7 +170,7 @@ define(['$', 'c'], function ($, c) {
         way:function(_way){
             switch(_way){
                 case 'normal':
-                
+                    
                 break;
                 case 'in':
                     this.curView.request.way='out';

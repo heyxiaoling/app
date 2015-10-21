@@ -1,4 +1,4 @@
-define(['$', '_', 'b', 'v','i', getViewPath('index')], function ($, _, b, v,i, html) {
+define(['$', '_', 'b', 'v','i','../common/index_banner', getViewPath('index')], function ($, _, b, v,i,ban,html) {
     var View = b.Class(v.PageView, {
         _propertys_: function () {
             this.template = html;
@@ -29,7 +29,12 @@ define(['$', '_', 'b', 'v','i', getViewPath('index')], function ($, _, b, v,i, h
         },
         //dom创建后，未显示
         onShow: function (z) {
-            this.is = new IScroll('#index-content', { mouseWheel: true, tap: true,click: true });
+            var _this=this;
+            _this.is = new IScroll('#index-content', { mouseWheel: true, tap: true,click: true });
+            setTimeout(function(){
+                _this.root.removeClass('r-next view in');
+                $('#index-banner').banner();
+            },500);
         },
         //dom隐藏前
         onHide: function () {
